@@ -68,26 +68,35 @@
     return r;
   };
 
-  const drawArc = function (position, sections, color, divisior) {
+  const drawArc = function (position, sections, color, divisior, isThick) {
+    var r1, r2, r3, r4, rad;
     g.setColor(color);
     rad = (settings.circle.height / 2) - position;
-    r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / divisior) - 90);
-    r2 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / divisior) - 90);
-    g.drawLine(r1[0], r1[1], r2[0], r2[1]);
+    if (isThick) {
+      r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / divisior) - 90 - 2);
+      r2 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / divisior) - 90 + 2);
+      r3 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / divisior) - 90 + 2);
+      r4 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / divisior) - 90 - 2);
+      g.fillPoly(r1.concat(r2, r3, r4));
+    } else {
+      r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / divisior) - 90);
+      r2 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / divisior) - 90);
+      g.drawLine(r1[0], r1[1], r2[0], r2[1]);
+    }
     g.setColor('#333333');
     g.drawCircle(settings.circle.middle, settings.circle.center, rad - settings.circle.width - 4);
   };
 
   const drawHourArc = function (sections) {
-    drawArc(settings.circle.initialPosition, sections, settings.circle.colorhour, 12);
+    drawArc(settings.circle.initialPosition, sections, settings.circle.colorhour, 12, true);
   };
 
   const drawMinArc = function (sections) {
-    drawArc(settings.circle.initialPosition + settings.circle.spacing, sections, settings.circle.colormin, 60);
+    drawArc(settings.circle.initialPosition + settings.circle.spacing, sections, settings.circle.colormin, 60, true);
   };
 
   const drawSecArc = function (sections) {
-    drawArc(settings.circle.initialPosition + (settings.circle.spacing * 2), sections, settings.circle.colorsec, 60);
+    drawArc(settings.circle.initialPosition + (settings.circle.spacing * 2), sections, settings.circle.colorsec, 60, false);
   };
 
   const drawClock = function () {
