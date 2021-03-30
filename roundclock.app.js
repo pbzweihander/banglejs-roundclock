@@ -53,7 +53,7 @@
   };
 
   const dateStr = function (date) {
-    return locale.date(new Date(), 1);
+    return locale.date(date, 1);
   };
 
   const getArcXY = function (centerX, centerY, radius, angle) {
