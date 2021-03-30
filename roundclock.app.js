@@ -2,10 +2,10 @@
   var minutes;
   var seconds;
   var hours;
+  var hoursForDrawing;
   var date;
   var first = true;
   var locale = require('locale');
-  var _12hour = (require("Storage").readJSON("setting.json", 1) || {})["12hour"] || false;
 
   //HR variables
   var id = 0;
@@ -37,11 +37,12 @@
       center: screen.center,
     },
     circle: {
+      colorhour: 0xFFFFFF,
       colormin: 0xFFFFFF,
       colorsec: 0xFFFFFF,
       initialPosition: 20,
-      spacing: 20,
-      width: 10,
+      spacing: 30,
+      width: 20,
       middle: screen.middle,
       center: screen.center,
       height: screen.height
@@ -50,7 +51,7 @@
       color: 0x333333,
       size: 10,
       x: screen.center,
-      y: screen.middle + 45
+      y: screen.middle
     }
   };
 
@@ -67,22 +68,26 @@
     return r;
   };
 
-  const drawArc = function (position, sections, color) {
+  const drawArc = function (position, sections, color, divisior) {
     g.setColor(color);
     rad = (settings.circle.height / 2) - position;
-    r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / 60) - 90);
-    r2 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / 60) - 90);
+    r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / divisior) - 90);
+    r2 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / divisior) - 90);
     g.drawLine(r1[0], r1[1], r2[0], r2[1]);
     g.setColor('#333333');
     g.drawCircle(settings.circle.middle, settings.circle.center, rad - settings.circle.width - 4);
   };
 
+  const drawHourArc = function (sections) {
+    drawArc(settings.circle.initialPosition, sections, settings.circle.colorhour, 12);
+  };
+
   const drawMinArc = function (sections) {
-    drawArc(settings.circle.initialPosition, sections, settings.circle.colormin);
+    drawArc(settings.circle.initialPosition + settings.circle.spacing, sections, settings.circle.colormin, 60);
   };
 
   const drawSecArc = function (sections) {
-    drawArc(settings.circle.initialPosition + settings.circle.spacing, sections, settings.circle.colorsec);
+    drawArc(settings.circle.initialPosition + (settings.circle.spacing * 2), sections, settings.circle.colorsec, 60);
   };
 
   const drawClock = function () {
@@ -93,10 +98,18 @@
     if (first == true) {
       minutes = currentTime.getMinutes();
       seconds = currentTime.getSeconds();
+      hours = currentTime.getHours();
+      if (hours >= 12) {
+        hoursForDrawing = hours - 12;
+      } else {
+        hoursForDrawing = hours;
+      }
+      for (count = 0; count <= hoursForDrawing; count++) {
+        drawHourArc(count);
+      }
       for (count = 0; count <= minutes; count++) {
         drawMinArc(count);
       }
-
       for (count = 0; count <= seconds; count++) {
         drawSecArc(count);
       }
@@ -106,16 +119,32 @@
     // Reset seconds
     if (seconds == 59) {
       g.setColor('#000000');
-      g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - (settings.circle.initialPosition + settings.circle.spacing));
-    }
-    // Reset minutes
-    if (minutes == 59 && seconds == 59) {
-      g.setColor('#000000');
-      g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - settings.circle.initialPosition);
+      // Reset minutes
+      if (minutes == 59) {
+        // Reset hours
+        if (hoursForDrawing == 11) {
+          g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - settings.circle.initialPosition);
+        } else {
+          g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - (settings.circle.initialPosition + settings.circle.spacing));
+        }
+      } else {
+        g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - (settings.circle.initialPosition + (settings.circle.spacing * 2)));
+      }
     }
 
     //Get date as a string
     date = dateStr(currentTime);
+
+    // Update hours when needed
+    if (hours != currentTime.getHours()) {
+      hours = currentTime.getHours();
+      if (hours > 13) {
+        hoursForDrawing = hours - 12;
+      } else {
+        hoursForDrawing = hours;
+      }
+      drawHourArc(hoursForDrawing);
+    }
 
     // Update minutes when needed
     if (minutes != currentTime.getMinutes()) {
@@ -129,33 +158,7 @@
       drawSecArc(seconds);
     }
 
-    //Write the time as configured in the settings
-    hours = currentTime.getHours();
-    if (_12hour && hours > 13) {
-      hours = hours - 12;
-    }
-
-    var meridian;
-
-    if (typeof locale.meridian === "function") {
-      meridian = locale.meridian(new Date());
-    } else {
-      meridian = "";
-    }
-
-    var timestr;
-
-    if (meridian.length > 0 && _12hour) {
-      timestr = hours + " " + meridian;
-    } else {
-      timestr = hours;
-    }
     g.setFontAlign(0, 0, 0);
-    g.setColor(settings.time.color);
-    g.setFont(settings.time.font, settings.time.size);
-    g.drawString(timestr, settings.time.center, settings.time.middle);
-
-    //Write the date as configured in the settings
     g.setColor(settings.date.color);
     g.setFont(settings.date.font, settings.date.size);
     g.drawString(date, settings.date.center, settings.date.middle);
