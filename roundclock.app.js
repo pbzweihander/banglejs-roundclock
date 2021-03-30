@@ -39,6 +39,8 @@
     circle: {
       colormin: 0xFFFFFF,
       colorsec: 0xFFFFFF,
+      initialPosition: 20,
+      spacing: 20,
       width: 10,
       middle: screen.middle,
       center: screen.center,
@@ -65,28 +67,22 @@
     return r;
   };
 
-  const drawMinArc = function (sections, color) {
+  const drawArc = function (position, sections, color) {
     g.setColor(color);
-    rad = (settings.circle.height / 2) - 20;
+    rad = (settings.circle.height / 2) - position;
     r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / 60) - 90);
-    //g.setPixel(r[0],r[1]);
     r2 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / 60) - 90);
-    //g.setPixel(r[0],r[1]);
     g.drawLine(r1[0], r1[1], r2[0], r2[1]);
     g.setColor('#333333');
-    g.drawCircle(settings.circle.middle, settings.circle.center, rad - settings.circle.width - 4)
+    g.drawCircle(settings.circle.middle, settings.circle.center, rad - settings.circle.width - 4);
   };
 
-  const drawSecArc = function (sections, color) {
-    g.setColor(color);
-    rad = (settings.circle.height / 2) - 40;
-    r1 = getArcXY(settings.circle.middle, settings.circle.center, rad, sections * (360 / 60) - 90);
-    //g.setPixel(r[0],r[1]);
-    r2 = getArcXY(settings.circle.middle, settings.circle.center, rad - settings.circle.width, sections * (360 / 60) - 90);
-    //g.setPixel(r[0],r[1]);
-    g.drawLine(r1[0], r1[1], r2[0], r2[1]);
-    g.setColor('#333333');
-    g.drawCircle(settings.circle.middle, settings.circle.center, rad - settings.circle.width - 4)
+  const drawMinArc = function (sections) {
+    drawArc(settings.circle.initialPosition, sections, settings.circle.colormin);
+  };
+
+  const drawSecArc = function (sections) {
+    drawArc(settings.circle.initialPosition + settings.circle.spacing, sections, settings.circle.colorsec);
   };
 
   const drawClock = function () {
@@ -98,11 +94,11 @@
       minutes = currentTime.getMinutes();
       seconds = currentTime.getSeconds();
       for (count = 0; count <= minutes; count++) {
-        drawMinArc(count, settings.circle.colormin);
+        drawMinArc(count);
       }
 
       for (count = 0; count <= seconds; count++) {
-        drawSecArc(count, settings.circle.colorsec);
+        drawSecArc(count);
       }
       first = false;
     }
@@ -110,12 +106,12 @@
     // Reset seconds
     if (seconds == 59) {
       g.setColor('#000000');
-      g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - 40);
+      g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - (settings.circle.initialPosition + settings.circle.spacing));
     }
     // Reset minutes
     if (minutes == 59 && seconds == 59) {
       g.setColor('#000000');
-      g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - 20);
+      g.fillCircle(settings.circle.middle, settings.circle.center, (settings.circle.height / 2) - settings.circle.initialPosition);
     }
 
     //Get date as a string
@@ -124,13 +120,13 @@
     // Update minutes when needed
     if (minutes != currentTime.getMinutes()) {
       minutes = currentTime.getMinutes();
-      drawMinArc(minutes, settings.circle.colormin);
+      drawMinArc(minutes);
     }
 
     //Update seconds when needed
     if (seconds != currentTime.getSeconds()) {
       seconds = currentTime.getSeconds();
-      drawSecArc(seconds, settings.circle.colorsec);
+      drawSecArc(seconds);
     }
 
     //Write the time as configured in the settings
