@@ -269,4 +269,6 @@
   // Show launcher when middle button pressed
   setWatch(Bangle.showLauncher, BTN2, { repeat: false, edge: "falling" });
 
+  // Redraw clock when bottom button pressed
+  setWatch(function () { first = true; }, BTN3, { repeat: false, edge: "falling" });
 }
